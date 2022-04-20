@@ -1,4 +1,4 @@
-- 👋 Hi, I’m @moolabintan
+- 👋 Hi, I’m Michael Olabintan
 - 👀 I’m interested in Cybersecurity, Data Structures, and Problem Solving using Computer Science
 - 🌱 I’m currently learning Data Structures and Algorithms and Introduction to Computer Systems
 - 📫 How to reach me: Email - moolabintan@gmail.com
