@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
+  <link rel="stylesheet" href="styles/bootstrap-material-design.min.css">
+  <link rel="stylesheet" href="styles/postlist.css">
+  <link id="fontTypeStylesheet" rel="stylesheet" href="styles/fontTypes/option1.css">
+  <link id="fontSizeStylesheet" rel="stylesheet" href="styles/fontSizes/small.css">
+  <title>App Name</title>
+</head>
+
+<body>
+
+  <div id="listPage" class="bmd-layout-container bmd-drawer-f-l bmd-drawer-overlay">
+
+    <header class="bmd-layout-header theme-font-fill-combo">
+      <div class="navbar navbar-dark fixed-top justy theme-font-fill-combo">
+        <button id="menuButton" class="navbar-toggler" type="button" data-toggle="drawer" data-target="#dw-s2">
+          <i id="menuIcon" class="material-icons title-font">menu</i>
+        </button>
+
+        <div id="pageHeader" class="title-font">Discussion Board</div>
+      </div>
+    </header>
+
+    <div id="dw-s2" class="bmd-layout-drawer bg-faded">
+      <header class="theme-font-fill-combo">
+        <a class="navbar-brand label-font">Student Forum</a>
+      </header>
+
+      <ul class="list-group">
+        <a id="menuGoToProfilePage" class="list-group-item label-font">
+          <i class="material-icons title-font">account_box</i>
+          <div class="label-font">Profile Page</div>
+        </a>
+
+        <a id="menuGoToMainPage" class="list-group-item label-font">
+          <i class="material-icons title-font">home</i>
+          <div class="label-font">Main Page</div>
+        </a>
+
+        <a id="menuSignOut" class="list-group-item label-font">
+          <i class="material-icons title-font">logout</i>
+          <div class="label-font">Sign Out</div>
+        </a>
+      </ul>
+    </div>
+
+    <main class="bmd-layout-content">
+      <div id="mainContentPlane" class="container page-container">
+
+        <div id="postFilter" class="btn-group" role="group" aria-label="Basic example">
+          <button id="myPosts" type="button" class="btn btn-secondary label-font">My Posts</button>
+          <button id="allPosts" type="button" class="btn btn-secondary label-font">All Posts</button>
+        </div>
+
+        <div id="postContainer">
+          <!-- This is wher all the post cards are generated -->
+        </div>
+
+      </div>
+    </main>
+
+    <button id="fab" type="button" class="btn bmd-btn-fab" data-toggle="modal" data-target="#addPostDialog">
+      <i class="material-icons title-font">add</i>
+    </button>
+  
+  </div>
+
+
+  <div class="modal fade" id="addPostDialog" tabindex="-1" role="dialog" aria-labelledby="Add Post Dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title header-font">Add a Post</h5>
+        </div>
+        <div class="modal-body">
+          <div class="form-group bmd-form-group">
+            <label id="inputPostTitleLabel" for="inputPostTitle" class="bmd-label-floating label-font">Post Title</label>
+            <input type="text" class="form-control minor-font" id="inputPostTitle">
+          </div>
+          <div class="form-group bmd-form-group">
+            <label for="inputPostText" class="bmd-label-floating label-font">Text</label>
+            <input type="text" class="form-control minor-font" id="inputPostText">
+          </div>
+
+          <div class="form-group bmd-form-group">
+            <label for="inputPhotoUrl" class="bmd-label-floating label-font">Image Url</label>
+            <input type="text" class="form-control minor-font" id="inputPhotoUrl">
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary label-font" data-dismiss="modal">CANCEL</button>
+          <button id="submitPost" type="button" class="btn btn-primary label-font" data-dismiss="modal">CREATE</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/popper.js"></script>
+  <script src="scripts/bootstrap-material-design.js"></script>
+  <script>$("body").bootstrapMaterialDesign();</script>
+  <script src="/__/firebase/7.18.0/firebase-app.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-analytics.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-auth.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-firestore.js"></script>
+  <script src="/__/firebase/init.js"></script>
+  <script src="scripts/main.js"></script>
+
+
+</body>
+
+</html>

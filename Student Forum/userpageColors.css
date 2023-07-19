@@ -1,0 +1,37 @@
+body {
+    background: #DDDDDD;
+}
+
+.bmd-layout-drawer>ul {
+    background-color: #ddd;
+}
+
+#classicThemeIcon {
+    color:#800000
+}
+
+#lightThemeIcon {
+    color: lightgray;
+}
+
+#darkThemeIcon {
+    color: black
+}
+
+/* #fontButtonContainer button {
+    background-color: lightgray;
+    color: black;
+} */
+
+.theme-font-color {
+    color: #800000;   
+}
+
+.theme-font-fill-combo {
+    background-color: #800000;
+    color: white;
+}
+
+#browseForPhotoButton {
+    border-color: #800000;
+}

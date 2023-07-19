@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
+  <link rel="stylesheet" href="styles/bootstrap-material-design.min.css">
+  <link rel="stylesheet" href="styles/post.css">
+  <link id="fontTypeStylesheet" rel="stylesheet" href="styles/fontTypes/option1.css">
+  <link id="fontSizeStylesheet" rel="stylesheet" href="styles/fontSizes/small.css">
+  <title>Student Form</title>
+</head>
+
+<body>
+
+  <div id="postPage" class="bmd-layout-container bmd-drawer-f-l bmd-drawer-overlay">
+
+    <header class="bmd-layout-header theme-font-fill-combo">
+      <div class="navbar navbar-dark fixed-top justy theme-font-fill-combo">
+
+        <button id="menuButton" class="navbar-toggler" type="button" data-toggle="drawer" data-target="#dw-s2">
+          <i id="menuIcon" class="material-icons header-font">menu</i>
+        </button>
+
+        <div id="postTitle" class="title-font">Title of the post</div>
+
+        <div class="dropdown pull-xs-right">
+          <button class="btn bmd-btn-icon dropdown-toggle" type="button" id="authorActionsMenu" data-toggle="dropdown"
+            aria-haspopup="true" aria-expanded="false">
+            <i class="material-icons">more_vert</i>
+          </button>
+
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="authorActionsMenu">
+            <button id="menuEdit" class="dropdown-item" type="button" data-toggle="modal" data-target="#editPostDialog">
+              <i class="material-icons">edit</i>&nbsp;&nbsp;&nbsp;Edit
+            </button>
+
+            <button id="menuDelete" class="dropdown-item" type="button" data-toggle="modal"
+              data-target="#deletePostDialog">
+              <i class="material-icons">delete</i>&nbsp;&nbsp;&nbsp;Delete
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <div id="dw-s2" class="bmd-layout-drawer bg-faded">
+      <header class="theme-font-fill-combo">
+        <a class="navbar-brand label-font">Student Forum</a>
+      </header>
+
+      <ul class="list-group">
+        <a id="menuGoToProfilePage" class="list-group-item label-font">
+          <i class="material-icons title-font">account_box</i>
+          <div class="label-font">Profile Page</div>
+        </a>
+
+        <a id="menuGoToMainPage" class="list-group-item label-font">
+          <i class="material-icons title-font">home</i>
+          <div class="label-font">Main Page</div>
+        </a>
+
+        <a id="menuSignOut" class="list-group-item label-font">
+          <i class="material-icons title-font">logout</i>
+          <div class="label-font">Sign Out</div>
+        </a>
+      </ul>
+    </div>
+
+
+    <main class="bmd-layout-content">
+      <div id="mainContentPlane" class="container page-container">
+
+        <div class="card">
+          <div class="card-body">
+            <div class="row no-gutters">
+              <div class="card-body">
+                  <div class="text-left">
+                  <h6 id="postContent" class=" mb-2 label-font">Sample post content</h6>
+                </div>
+              </div>
+            </div>
+            <div class="text-center">
+              <img id="postPhoto" src="images/rose_logo.png" class="card-img mx-auto" alt="">
+              </div>
+          </div>
+
+          <div>
+            <div id="replyContainer">
+
+            </div>
+          </div>
+
+          <div id="replyButtonContainer">
+            <button id="replyButton" type="button" class="list-group-item label-font" data-toggle="modal"
+              data-target="#replyDialog">
+              <i class="material-icons title-font">reply</i>
+              <div class="label-font">Reply</div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Edit Post Modal -->
+  <div class="modal fade" id="editPostDialog" tabindex="-1" role="dialog" aria-labelledby="Edit PostDialog"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title header-font">Edit this post</h5>
+        </div>
+        <div class="modal-body">
+
+
+          <div class="form-group bmd-form-group">
+            <label for="inputTitle" class="bmd-label-floating label-font">Title</label>
+            <input type="text" class="form-control minor-font" id="inputTitle" placeholder="">
+          </div>
+          <div class="form-group bmd-form-group">
+            <label for="inputContent" class="bmd-label-floating label-font">Content</label>
+            <input type="text" class="form-control minor-font" id="inputContent" placeholder="">
+            <span class="bmd-help minor-font">What content should this post have?</span>
+          </div>
+          <div class="form-group bmd-form-group">
+            <label for="inputPhotoUrl" class="bmd-label-floating label-font">Photo Url</label>
+            <input type="text" class="form-control minor-font" id="inputPhotoUrl" placeholder="">
+          </div>
+
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary label-font" data-dismiss="modal">CANCEL</button>
+          <button id="submitEditPost" type="button" class="btn btn-primary label-font"
+            data-dismiss="modal">SAVE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END Modal -->
+
+
+  <!-- Delete Post Modal -->
+  <div class="modal fade" id="deletePostDialog" tabindex="-1" role="dialog" aria-labelledby="Delete PostDialog"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title header-font">Delete this post</h5>
+        </div>
+        <div class="modal-body label-font">
+          Are you sure you want to delete this post?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary label-font" data-dismiss="modal">CANCEL</button>
+          <button id="submitDeletePost" type="button" class="btn btn-primary label-font"
+            data-dismiss="modal">DELETE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END Modal -->
+
+  <!-- Reply Modal -->
+  <div class="modal fade" id="replyDialog" tabindex="-1" role="dialog" aria-labelledby="Reply Dialog"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title header-font">Post Your Reply</h5>
+        </div>
+        <div class="modal-body">
+
+          <div class="form-group bmd-form-group">
+            <label for="inputText" class="bmd-label-floating label-font">Text</label>
+            <input type="text" class="form-control minor-font" id="inputText" placeholder="">
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary label-font" data-dismiss="modal">CANCEL</button>
+          <button id="submitReply" type="button" class="btn btn-primary label-font" data-dismiss="modal">Reply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END Modal -->
+
+  <!-- Edit Reply Modal -->
+  <div class="modal fade" id="editReplyDialog" tabindex="-1" role="dialog" aria-labelledby="Edit ReplyDialog"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title header-font">Edit this reply</h5>
+        </div>
+        <div class="modal-body">
+
+          <div class="form-group bmd-form-group">
+            <label for="inputNewText" class="bmd-label-floating label-font">Text</label>
+            <input type="text" class="form-control minor-font" id="inputNewText" placeholder="">
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary label-font" data-dismiss="modal">CANCEL</button>
+          <button id="submitEditReply" type="button" class="btn btn-primary label-font"
+            data-dismiss="modal">SAVE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END Modal -->
+
+  <!-- Delete Post Modal -->
+  <div class="modal fade" id="deleteReplyDialog" tabindex="-1" role="dialog" aria-labelledby="Delete ReplyDialog"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title header-font">Delete this reply</h5>
+        </div>
+        <div class="modal-body label-font">
+          Are you sure you want to delete this reply?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary label-font" data-dismiss="modal">CANCEL</button>
+          <button id="submitDeleteReply" type="button" class="btn btn-primary label-font"
+            data-dismiss="modal">DELETE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- END Modal -->
+
+  <script src="scripts/jquery.min.js"></script>
+  <script src="scripts/popper.js"></script>
+  <script src="scripts/bootstrap-material-design.js"></script>
+  <script>$("body").bootstrapMaterialDesign();</script>
+  <script src="/__/firebase/7.18.0/firebase-app.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-analytics.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-auth.js"></script>
+  <script src="/__/firebase/7.18.0/firebase-firestore.js"></script>
+  <script src="/__/firebase/init.js"></script>
+  <script src="scripts/main.js"></script>
+</body>
+
+</html>
