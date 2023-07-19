@@ -1,0 +1,21 @@
+module Register
+(input_value, CLK, RST, output_value);
+
+input [15:0] input_value;
+input CLK, RST;
+output [15:0] output_value;
+
+reg [15:0] output_value;
+
+
+always @ (posedge CLK)
+	begin
+	
+		if(!RST) 
+			output_value = input_value;
+		else
+			output_value  = 16'h0000;
+	end
+	
+
+endmodule

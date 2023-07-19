@@ -1,0 +1,121 @@
+`timescale 1 ns/1 ps
+
+module implementation2TB();
+reg [15:0] input_value;
+reg CLK, RST;
+wire [15:0] output_value;
+parameter HALF_PERIOD=50;
+parameter PERIOD = HALF_PERIOD*2;
+
+// Memory input and out
+reg [15:0] din;
+reg [15:0] Addr;
+reg Mem_Write;
+wire [15:0] dout;
+
+// ALU inputs and out
+reg [15:0] A, B;
+reg Op;
+wire [15:0] ALU_Out;
+
+//Instruction Register
+reg [15:0] instruction;
+wire [1:0] reg1, reg2, regDest;
+wire [5:0] imm1;
+wire [7:0] imm2;
+wire [9:0] imm3;
+
+// Register File 
+reg write;
+reg [2:0] wrAddr;
+reg [15:0] wrData;
+reg [2:0] rdAddrA, rdAddrB;
+wire [15:0] rdDataA, rdDataB;
+
+
+implementation UUT(
+//Used by all
+.CLK(CLK),.RST(RST),
+
+//PC Register
+.input_value(ALU_Out),
+.output_value(output_value),
+
+// Memory
+.din(din),
+.Addr(output_value),
+.Mem_Write(Mem_Write),
+.dout(dout),
+
+// ALU
+.A(output_value),
+.ALU_Out(ALU_Out),
+.B(B),
+.Op(Op),
+
+//instruction reg
+.instruction(dout),
+.reg1(reg1), .reg2(reg2), .regDest(regDest),
+.imm1(imm1), .imm2(imm2), .imm3(imm3),
+
+// Register file
+.write(write),
+.rst(RST),
+.wrAddr(wrAddr),
+.wrData(wrData),
+.rdAddrA(rdAddrA),
+.rdDataA(rdDataA),
+.rdAddrB(rdAddrB),
+.rdDataB(rdDataB)
+
+);
+
+integer failed_tests = 0;
+
+initial begin
+    CLK = 0;
+    forever begin
+        #(HALF_PERIOD);
+        CLK = ~CLK;
+    end
+end
+
+
+initial begin
+	input_value = 0;
+	A = 0;
+	B = 1;
+	din = 0;
+	Mem_Write = 0;
+	Op = 0;
+	Addr = 0;
+	RST = 1;	
+	instruction = 0;
+	#(PERIOD)	
+	RST = 0;
+	input_value = ALU_Out;
+	A = output_value;
+	Addr = output_value;
+	instruction = dout;
+	#(PERIOD);
+	input_value = ALU_Out;
+	A = output_value;
+	Addr = output_value;
+	instruction = dout;	
+	wrData = 500;
+	write = 1;
+	wrAddr = regDest;
+	#100
+	rdAddrA = regDest;
+	#100
+	if (rdDataA != 500) begin
+		$display("%d", rdDataA);
+		failed_tests = failed_tests + 1;
+	end
+	#(PERIOD);
+	
+	$display("Failed tests: %d fails", failed_tests);
+end
+endmodule
+
+	

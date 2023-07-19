@@ -1,0 +1,29 @@
+`timescale 1ns / 1ps
+
+module mux_4_1_tb;
+
+reg [1:0] sel;
+reg [15:0] a, b, c, d;
+wire [15:0] out;
+mux_4_1 uut(sel, a, b, c, d, out);
+
+integer failed_tests;
+
+initial begin
+  failed_tests = 0;
+  // Test case 1
+  sel = 2'b00;
+  a = 1;
+  b = 2;
+  c = 3;
+  d = 4;
+  if (out != a) begin
+    $display("Test case 1 failed");
+    failed_tests = failed_tests + 1;
+  end
+  #1;
+  $display("All tests finished, %d tests failed", failed_tests);
+end
+end module
+
+

@@ -1,0 +1,661 @@
+`timescale 1ns / 1ps
+
+module ControlTB;
+
+	reg [3:0] Opcode;
+	reg [1:0] R1;
+	reg [1:0] R2;
+	reg CLK;
+	reg RST;
+	wire MemRead;
+	wire ALUSRC1;
+	wire [1:0]ALUSRC2;
+	wire IRWrite;
+	wire ALUOPP;
+	wire [1:0] R1Out;
+	wire [1:0] IorD;
+	wire [1:0] R2Out;
+	wire DatatoMem;
+	wire regWrite;
+	wire [1:0]MemtoReg;
+	wire [4:0] State;
+	
+	Control UUT(
+	.Opcode(Opcode),
+	.R1(R1),
+	.R2(R2),
+	.CLK(CLK),
+	.RST(RST),
+	.MemRead(MemRead),
+	.ALUSRC1(ALUSRC1),
+	.ALUSRC2(ALUSRC2),
+	.IRWrite(IRWrite),
+	.ALUOPP(ALUOPP),
+	.R1Out(R1Out),
+	.IorD(IorD),
+	.R2Out(R2Out),
+	.DatatoMem(DatatoMem),
+	.regWrite(regWrite),
+	.MemtoReg(MemtoReg),
+	.State(State)
+	);
+	
+	integer failed = 0;
+	
+	parameter HALF_PERIOD = 50;
+	parameter PERIOD = HALF_PERIOD * 2;
+	parameter [4:0] Reset_s = 0, Fetch = 1, Decode = 2, PushDec = 3,
+		PushMemWrite = 4, PushRegWrite = 5, Pushi = 6, Pop = 7, PopInc = 8,
+		PopWrite = 9, AddiOpp = 10, AddiWrite = 11, Load = 12, Peek = 13,
+		PeekRead = 14, PeekWrite = 15, SAdd = 16, SSub = 17, SWrite = 18,
+		R = 19, JumpProc = 20, Ret = 21, Proc = 22;
+
+	
+initial begin
+    CLK = 0;
+    forever begin
+        #(HALF_PERIOD);
+        CLK = ~CLK;
+    end
+end
+
+
+initial begin
+
+	//test 1
+//	RST = 1;
+//	Opcode = 4'b0000;
+//	R1 = 2'b00;
+//	R2 = 2'b00;
+//	#PERIOD;
+//	if(MemRead != 0 || ALUSRC1 != 0 || ALUSRC2 != 2'b00 || IRWrite != 0 ||
+//		ALUOPP != 0	|| R1Out != 2'b00 || IorD != 2'b00 || R2Out != 2'b00 || DatatoMem != 0
+//		|| regWrite != 0 || MemtoReg != 2'b00)
+//		begin
+//			failed = failed + 1;
+//			$display("Test 1 failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+//			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+//			DatatoMem, regWrite, MemtoReg, State);
+//		end
+	
+	//test 2 Addi00
+	#PERIOD;
+	RST = 0;
+	Opcode = 4'b0000;
+	R1 = 2'b00;
+	R2 = 2'b00;
+	#(2*PERIOD);
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 2a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+		if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 2b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//AddiOpp0
+		if(ALUSRC1 != 1 || ALUSRC2 != 2'b01 || ALUOPP != 0	|| R1Out != 2'b00)
+		begin
+			failed = failed + 1;
+			$display("Test 2c failed:ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, R1Out = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, R1Out, State);
+		end
+	#PERIOD;
+	//AddiWrite
+	if(regWrite != 1 || MemtoReg != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 2d failed: regWrite = %d, MemtoReg = %d, State = %d",
+			regWrite, MemtoReg, State);
+		end
+	
+
+	//test 3 Addi01
+	Opcode = 4'b0000;
+	R1 = 2'b01;
+	R2 = 2'b00;
+	#PERIOD;
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 3a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+		if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 3b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//AddiOpp0
+		if(ALUSRC1 != 1 || ALUSRC2 != 2'b01 || ALUOPP != 0	|| R1Out != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 3c failed:ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, R1Out = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, R1Out, State);
+		end
+	#PERIOD;
+	//AddiWrite
+	if(regWrite != 1 || MemtoReg != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 3d failed: regWrite = %d, MemtoReg = %d, State = %d",
+			regWrite, MemtoReg, State);
+		end
+	
+	
+	//test 4 li
+	Opcode = 4'b0001;
+	R1 = 2'b00;
+	R2 = 2'b00;
+	#PERIOD;
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 4a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 4b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//load
+	if(regWrite != 1 || MemtoReg != 2'b10)
+		begin
+			failed = failed + 1;
+			$display("Test 4c failed: regWrite = %d, MemtoReg = %d, State = %d",
+			regWrite, MemtoReg, State);
+		end
+	
+	//test 5 addreg
+	Opcode = 4'b0010;
+	R1 = 2'b10;
+	R2 = 2'b01;
+	#PERIOD;
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 5a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 5b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD
+	//SAdd
+	if(ALUSRC1 != 1 || ALUSRC2 != 2'b00 ||	ALUOPP != 0	|| R1Out != 2'b10
+	|| R2Out != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 5c failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, R1Out = %d, R2Out = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, R1Out, R2Out, State);
+		end
+	#PERIOD
+	//SWrite
+		if(regWrite != 1 || MemtoReg != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 5d failed:regWrite = %d, MemtoReg = %d, State = %d",
+			regWrite, MemtoReg, State);
+		end
+	
+	//test 6 subreg
+	Opcode = 4'b0011;
+	R1 = 2'b00;
+	R2 = 2'b11;
+	#PERIOD;
+		//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 6a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 6b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//SSub
+	if(ALUSRC1 != 1 || ALUSRC2 != 2'b00 ||	ALUOPP != 1	|| R1Out != 2'b00
+	|| R2Out != 2'b11)
+		begin
+			failed = failed + 1;
+			$display("Test 6c failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, R1Out = %d, R2Out = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, R1Out, R2Out, State);
+		end
+	#PERIOD
+	//SWrite
+	if(regWrite != 1 || MemtoReg != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 6d failed:regWrite = %d, MemtoReg = %d, State = %d",
+			regWrite, MemtoReg, State);
+		end
+	
+	
+	//test 7 pushi
+	Opcode = 4'b0100;
+	R1 = 2'b11;
+	R2 = 2'b00;
+	#PERIOD;
+		//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 7a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 7b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//PushDec
+	if(ALUSRC1 != 1 || ALUSRC2 != 2'b10 || ALUOPP != 1	|| R1Out != 2'b10)
+		begin
+			failed = failed + 1;
+			$display("Test 7c failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	#PERIOD;
+	//Pushi
+	if(MemRead != 0 || IorD != 2'b01 || DatatoMem != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 7d failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	#PERIOD;
+	//PushRegWrite
+	if(regWrite != 1 || MemtoReg != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 7e failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	
+	//test 8 Push
+	Opcode = 4'b0101;
+	R1 = 2'b11;
+	R2 = 2'b10;
+	#PERIOD;
+		//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 8a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 8b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//PushDec
+	if(ALUSRC1 != 1 || ALUSRC2 != 2'b10 || ALUOPP != 1	|| R1Out != 2'b10)
+		begin
+			failed = failed + 1;
+			$display("Test 8c failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	#PERIOD;
+	//PushMemWrite
+	if(MemRead != 0 || IorD != 2'b01 || DatatoMem != 0 || R2Out != 2'b10)
+		begin
+			failed = failed + 1;
+			$display("Test 8d failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	#PERIOD;
+	//PushRegWrite
+	if(regWrite != 1 || MemtoReg != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 8e failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+		
+	//test 9 Pop
+	Opcode = 4'b0110;
+	R1 = 2'b00;
+	R2 = 2'b00;
+	#(PERIOD);
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 9a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 9b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//Pop
+	if(MemRead != 1 || IorD != 2'b10 || R2Out != 2'b10 || 
+		regWrite != 1 || MemtoReg != 2'b00)
+		begin
+			failed = failed + 1;
+			$display("Test 9c failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	#PERIOD;
+	//PopInc
+	if(ALUSRC1 != 1 || ALUSRC2 != 2'b10 || ALUOPP != 0	|| R1Out != 2'b10)
+		begin
+			failed = failed + 1;
+			$display("Test 9d failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	#PERIOD;
+	//PopWrite
+	if(MemRead != 0 || IorD != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 9e failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	
+	//test 10 jump
+	Opcode = 4'b0111;
+	R1 = 2'b00;
+	R2 = 2'b00;
+	#(PERIOD);
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 10a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 10b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//JumpProc
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b10 ||	ALUOPP != 0)
+		begin
+			failed = failed + 1;
+			$display("Test 10c failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+		
+	//test 11 ret
+	Opcode = 4'b1000;
+	R1 = 2'b00;
+	R2 = 2'b00;
+	#(PERIOD);
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 11a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 11b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//ret
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b10 ||	ALUOPP != 0)
+		begin
+			failed = failed + 1;
+			$display("Test 11c failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	
+	//test 12 proc
+	Opcode = 4'b1001;
+	R1 = 2'b00;
+	R2 = 2'b00;
+	#(PERIOD);
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 10a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 10b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//JumpProc
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b10 ||	ALUOPP != 0)
+		begin
+			failed = failed + 1;
+			$display("Test 10c failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	#PERIOD;
+	//Proc
+	if(regWrite != 1 || MemtoReg != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 10d failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	
+	//test 13 lui
+	Opcode = 4'b1110;
+	R1 = 2'b10;
+	R2 = 2'b00;
+	#PERIOD;
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 13a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 13b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//load
+	if(regWrite != 1 || MemtoReg != 2'b10)
+		begin
+			failed = failed + 1;
+			$display("Test 13c failed: regWrite = %d, MemtoReg = %d, State = %d",
+			regWrite, MemtoReg, State);
+		end
+	
+	//test 14 Peek
+	Opcode = 4'b1111;
+	R1 = 2'b10;
+	R2 = 2'b00;
+	#PERIOD;
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 14a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+	if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 14b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//Peek
+	if(ALUSRC1 != 1 || ALUSRC2 != 2'b01|| ALUOPP != 0 || R1Out != 2'b10)
+		begin
+			failed = failed + 1;
+			$display("Test 14c failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	#PERIOD;
+	//PeekRead
+	if(MemRead != 1 || IorD != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 14d failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+	#PERIOD;
+	//PeekWrite
+	if(regWrite != 1 || MemtoReg != 2'b00)
+		begin
+			failed = failed + 1;
+			$display("Test 14e failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+		
+		
+//test 1
+	RST = 1;
+	Opcode = 4'b0100;
+	R1 = 2'b01;
+	R2 = 2'b10;
+	#PERIOD;
+	if(MemRead != 0 || ALUSRC1 != 0 || ALUSRC2 != 2'b00 || IRWrite != 0 ||
+		ALUOPP != 0	|| R1Out != 2'b00 || IorD != 2'b00 || R2Out != 2'b00 || DatatoMem != 0
+		|| regWrite != 0 || MemtoReg != 2'b00)
+		begin
+			failed = failed + 1;
+			$display("Test 1 failed: MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, R1Out = %d, IorD = %d, R2Out = %d, DatatoMem = %d, regWrite = %d, MemtoReg = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, R1Out, IorD, R2Out,
+			DatatoMem, regWrite, MemtoReg, State);
+		end
+		
+	#(3*PERIOD);
+	
+		//test 3 Addi01
+	RST = 0;
+	Opcode = 4'b0000;
+	R1 = 2'b01;
+	R2 = 2'b00;
+	#PERIOD;
+	#PERIOD;
+	//fetch
+	if(MemRead != 1 || ALUSRC1 != 0 || ALUSRC2 != 2'b10 || IRWrite != 1 ||
+		ALUOPP != 0||IorD != 0)
+		begin
+			failed = 1+ failed ;
+			$display("Test 3a failed:  MemRead = %d, ALUSRC1 = %d, ALUSRC2 = %d, IRWrite = %d, ALUOPP = %d, IorD = %d, State = %d",
+			MemRead, ALUSRC1, ALUSRC2, IRWrite,	ALUOPP, IorD, State);
+		end
+	#PERIOD;
+	//decode
+		if(ALUSRC1 != 0 || ALUSRC2 != 2'b01	|| ALUOPP != 0 || regWrite != 1)
+		begin
+			failed = failed + 1;
+			$display("Test 3b failed: ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, regWrite = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, regWrite, State);
+		end
+	#PERIOD;
+	//AddiOpp0
+		if(ALUSRC1 != 1 || ALUSRC2 != 2'b01 || ALUOPP != 0	|| R1Out != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 3c failed:ALUSRC1 = %d, ALUSRC2 = %d, ALUOPP = %d, R1Out = %d, State = %d",
+			ALUSRC1, ALUSRC2, ALUOPP, R1Out, State);
+		end
+	#PERIOD;
+	//AddiWrite
+	if(regWrite != 1 || MemtoReg != 2'b01)
+		begin
+			failed = failed + 1;
+			$display("Test 3d failed: regWrite = %d, MemtoReg = %d, State = %d",
+			regWrite, MemtoReg, State);
+		end
+	$stop;	
+	end
+endmodule
+
+	

@@ -1,0 +1,703 @@
+`timescale 1 ns/1 ps
+
+module Control(
+	input [3:0] Opcode,
+	input [1:0] R1,
+	input [1:0] R2,
+	input [1:0] R3,
+	input CLK,
+	input RST,
+	output reg MemRead,
+	//output reg PCSRC,
+	output reg [1:0]ALUSRC1,
+	output reg [1:0] ALUSRC2,
+	output reg IRWrite,
+	output reg ALUOPP,
+	output reg [1:0] R1Out,
+	output reg [1:0] IorD,
+	output reg [1:0] R2Out,
+	output reg DatatoMem,
+	output reg regWrite,
+	output reg [1:0]MemtoReg,
+	output reg PCWrite,
+	output reg [1:0]cmp,
+	output reg R1Write,
+	output reg R2Write,
+	output reg MDWrite,
+	output reg ALUOutWrite,
+	output reg ImmWrite,
+	output reg Branch,
+	output reg [1:0] PCSRC,	
+	//output reg MDSel,
+	output reg [1:0] ImmSel,
+	output reg [4:0] State
+);
+
+
+
+parameter [4:0] Reset_s = 0, Fetch = 1, Decode = 2, PushDec = 3,
+ PushMemWrite = 4, PushRegWrite = 5, Pushi = 6, Pop = 7, PopInc = 8,
+ PopWrite = 9, AddiOpp = 10, AddiWrite = 11, Load = 12, Peek = 13,
+ PeekRead = 14, PeekWrite = 15, SAdd = 16, SSub = 17, SWrite = 18,
+ gte = 19, JumpProc = 20, Ret = 21, Proc = 22, LessThan = 23,
+ Equal = 24, NotEqual = 25;
+
+always @ (posedge CLK)
+	begin
+	if(RST) State = Reset_s;
+
+			//$display("The opcode is %d", Opcode);
+	case (State)
+				Reset_s: 
+					begin
+						// MemWrite = 0;
+						 ALUSRC1 = 0;
+						 ALUSRC2 = 2'b00;
+						 IRWrite = 0;
+						 ALUOPP = 0;
+						 R1Out = 2'b00;
+						 memRead = 0;
+						 IorD = 2;
+						 R2Out = 2'b00;
+						 DatatoMem = 0;
+						 regWrite = 0;
+						 MemtoReg = 2'b00;
+						 PCWrite = 0;
+						 R1Write = 0;
+						 R2Write = 0;
+						 MDWrite = 0;
+						/// PCSource = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						 PCSRC = 0;
+						 ImmSel = 2'b00;
+						 cmp = 2'b00;
+						 //MDSel = 0;
+						if(!RST) begin
+						// #50;
+						 State = Fetch;
+						 end
+					end
+				Fetch: 
+					begin
+						 ALUSRC1 = 1;
+						 ALUSRC2 = 2'b10;
+						 IRWrite = 1;
+						 ImmSel = 2'b00;
+						 ALUOPP = 0;
+						 PCSRC = 1;
+						 IorD = 2;
+						 R2Out = 2'b00;
+						 DatatoMem = 0;
+						 regWrite = 0;
+						 MemtoReg = 2'b00;
+						 PCWrite = 1;
+						 Branch = 0;
+						 R1Write = 0;
+						 R2Write = 0;
+						 ImmWrite = 0;
+						// MDSel = 1;
+						//#50;
+						State = Decode;
+					end
+				Decode: 
+					begin
+						$display("Opcode is: %d", Opcode);
+						 MemtoReg = 2'b00;
+						 regWrite = 0;
+//						 #200;
+//						 regWrite = 0;
+//						 ImmSel = 2'b11;
+//						 ImmWrite = 1;
+//						 #100;
+						 ImmWrite = 0;
+						 ALUSRC1 = 1;
+						 ALUSRC2 = 2'b01;
+						 ALUOPP = 0; // 0 is add 1 is sub
+						 regWrite = 0;
+						 PCWrite = 0;
+						 MDWrite = 0;
+						 ImmSel = 2'b01;
+						 R1Write = 1;
+						 R2Write = 1;
+						 IRWrite = 0;
+						 ALUOutWrite = 1;
+						 ImmWrite = 0;
+						 //#50;
+						if(Opcode == 4'b0000) State = AddiOpp; //addi0 && R1 == 2'b00
+						//else if (Opcode == 4'b0000 && R1 == 2'b01) State = AddiOpp1; //addi1
+						else if (Opcode == 4'b0001 || Opcode == 4'b1110) State = Load; //li/lui
+						else if (Opcode == 4'b1111) State = Peek; //peek
+						else if (Opcode == 4'b0010) State = SAdd; //add, R1 = 00, R2 = 00;
+						else if (Opcode == 4'b0011) State = SSub; //sub, R1 = 00, R2 = 00
+				
+						else if (Opcode == 4'b0100 || Opcode == 4'b0101) State = PushDec; //push/pushi
+						else if (Opcode == 4'b0110) State = Pop; //pop
+						else if (Opcode == 4'b1010) State = Equal;
+						else if (Opcode == 4'b1011) State = gte;
+						else if (Opcode == 4'b1100) State = LessThan;
+						else if (Opcode == 4'b1101) State = NotEqual; 
+						else if (Opcode == 4'b0111 || Opcode == 4'b1001) State = JumpProc; // jump/proc
+						else if (Opcode == 4'b1000) State = Ret; //ret 
+					end
+					
+				AddiOpp: 
+					begin
+//						 ImmSel = 2'b10;
+//						 ImmWrite = 1;
+//						 #200;
+						 ImmWrite = 0;
+						 regWrite = 0;
+						 ALUSRC1 = 2;
+						 ALUSRC2 = 2'b01;
+						 ALUOPP = 0;
+						 R1Write = 1;
+						 R2Write = 0;
+						 R1Out = R1;
+						 ALUSRC1 = 0;
+						 ALUSRC2 = 2'b01;
+						 ALUOutWrite = 1;
+						 ALUOPP = 0;
+						 PCWrite = 0;
+						 MDWrite = 0;
+						 ImmWrite = 0;
+						 ImmSel = 2'b10;
+						 //#100;
+						State = AddiWrite;
+					end
+//				AddiOpp1:
+//					begin
+//						assign ALUSRC1 = 1;
+//						assign ALUSRC2 = 2'b01;
+//						assign ALUOPP = 0;
+//						assign R1Out = 2'b01;
+//						State = AddiWrite;
+//					end	
+
+
+				AddiWrite: 
+					begin
+						 MemtoReg = 2'b01;
+						 regWrite = 1;
+						 PCWrite = 0;
+						 MDWrite = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						 ImmSel = 2'b10;
+						 //#200;
+						State = Fetch;
+					end
+					
+				Load: 
+					begin
+						// ImmSel = 2'b10;
+						 MemtoReg = 2'b10;
+						 regWrite = 1;
+//						 #200;
+//						 regWrite = 0;
+						 PCWrite = 0;
+						 MDWrite = 0;
+						 ImmSel = 2'b10;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						 R1Write = 1;
+						 R2Write = 1;
+						// #200;
+						State = Fetch;
+						
+					end
+					
+				Peek:
+					begin
+						  R2Out = 2'b10;
+						 R2Write = 1;
+						//  #200;
+						//  R2Write = 0;
+						 //MemWrite = 0;
+						//  IorD = 2'b10;
+						//  MDWrite = 1;
+						//  #400;
+						 MDWrite = 0;
+						 MemRead = 1;
+						 ALUOutWrite = 0;
+						// MDSel = 0;
+						 ImmSel = 2'b10;
+						 ImmWrite = 0;
+						 R1Write = 0;
+						 R2Write = 0;
+						State = Fetch;
+					end
+					
+//				PeekRead: 					
+//					begin
+//						 regWrite = 0;
+//						 MemRead = 1;
+//						 PCWrite = 0;
+//						 ImmSel = 2'b10;
+//						 IorD = 2'b01;
+//						 MDWrite = 0;
+//						 ALUOutWrite = 0;
+//						 ImmWrite = 0;
+//						State = PeekWrite;
+//					end
+					
+//				PeekWrite:
+//					begin
+//						 regWrite = 1;
+//						 MemtoReg = 2'b00;
+//						 PCWrite = 0;
+//						 MDWrite = 0;
+//						 ImmSel = 2'b10;
+//						 ALUOutWrite = 0;
+//						 ImmWrite = 0;
+//						State = Fetch;
+//					end
+					
+				PushDec: 
+					begin
+						 R1Out = 2'b10;
+						 R1Write = 1;
+//						 #200;
+//						 R1Write = 0;
+//						 ALUSRC1 = 0;
+//						 ALUSRC2 = 2'b10;
+//						 ImmSel = 2'b10;
+//						 ALUOPP = 1;
+//						 ALUOutWrite = 1;
+//						 #300;
+						 ALUOutWrite = 0;
+						 regWrite = 0;
+						 R1Out = 2'b10;
+						 PCWrite = 0;
+						 MDWrite = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						// MDSel = 0;
+						 R1Write = 1;
+						 R2Write = 0;
+						if(Opcode == 4'b0101) State = PushMemWrite;
+						//else if(Opcode == 0101 && R2 == 01) State = PushMemWrite1;
+						else if(Opcode == 4'b0100) State = Pushi;
+					end
+					
+				PushMemWrite: 
+					begin
+						 MemRead = 0;
+						 IorD = 1;
+						 R2Out = R2;
+						 regWrite = 0;
+						 ImmSel = 2'b10;
+						 DatatoMem = 0;						
+						 PCWrite = 0;
+						 MDWrite = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						 R1Write = 0;
+						 R2Write = 0;
+						 //MDSel = 0;
+						 State = PushRegWrite;
+					end
+//				PushMemWrite1:
+//					begin
+//						assign MemWrite = 0;
+//						assign IorD = 2'b01;
+//						assign R2Out = 2'b01;
+//						assign DatatoMem = 0;	
+//						State = PushRegWrite;
+//					end
+
+
+				Pushi: 
+					begin
+						 MemRead = 0;
+						 IorD = 0;
+						 PCWrite = 0;
+						 regWrite = 0;
+						 DatatoMem = 1;
+						 MDWrite = 0;
+						 ImmSel = 2'b10;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						 //MDSel = 0;
+						 State = PushRegWrite;
+					end
+					
+				PushRegWrite: 
+					begin
+							
+						 regWrite = 1;
+						 PCWrite = 0;
+						 MemtoReg = 2'b01;
+						 PCWrite = 0;
+						 MDWrite = 0;
+						 ImmSel = 2'b10;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						 //MDSel = 0;
+						State = Fetch;
+					end
+					
+				Pop: 
+					begin
+						 MemRead = 1;
+						 IorD = 1;
+						 R2Out = 2'b10;
+						 R2Write = 1;
+						//  #200;
+						//  R2Write = 0;
+						//  MemWrite = 0;
+						//  IorD = 2'b10;
+						//  MDWrite = 1;
+						//  #400;
+						//  MDWrite = 0;
+						//  regWrite = 1;
+						//  MemtoReg = 2'b00;
+						//  #200;
+						 PCWrite = 0;
+						 MDWrite = 0;
+						 ImmSel = 2'b10;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						 //MDSel = 0;
+						State = PopInc;
+					end
+					
+				PopInc: 
+					begin
+						 ALUSRC1 = 1;
+						 ALUSRC2 = 2'b00;
+						 ALUOPP = 0;
+						 //MDSel = 0;
+						 regWrite = 0;
+						 R1Out = 2'b10;
+						 PCWrite = 0;
+						 ImmSel = 2'b10;
+						 MDWrite = 0;
+						 ImmWrite = 0;
+						State = PopWrite;
+					end
+					
+				PopWrite:
+					begin
+						 MemRead = 0;
+						 IorD = 0;
+						 regWrite = 0;
+						 ImmSel = 2'b10;
+						 MDWrite = 0;
+						// MDSel = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						 State = Fetch;
+					end
+					
+				SAdd: 
+					begin
+						 
+						 R1Out = R1;
+						 R2Out = R3;
+						 R1Write = 1;
+						 R2Write = 1;
+//						 #200;
+//						 R1Write = 0;
+//						 R2Write = 0;
+//						 ALUSRC1 = 0;
+//						 ALUSRC2 = 2'b00;
+//						 ALUOPP = 0;
+//						 ALUOutWrite = 1;
+//						 #200;
+						 ALUOutWrite = 0;
+						 PCWrite = 0;
+						 regWrite = 0;
+						 MDWrite = 0;
+						 ImmWrite = 0;
+						 ImmSel = 2'b00;
+						 //MDSel = 0;
+						 State = SWrite;
+					end
+//				SAdd01: 
+//					begin
+//						assign ALUSRC1 = 1;
+//						assign ALUSRC2 = 2'b00;
+//						assign ALUOPP = 0;
+//						assign R1Out = 2'b01;
+//						assign R2Out = 2'b00;
+//						State = SWrite;
+//					end
+//				SAdd10: 
+//					begin
+//						assign ALUSRC1 = 1;
+//						assign ALUSRC2 = 2'b00;
+//						assign ALUOPP = 0;
+//						assign R1Out = 2'b00;
+//						assign R2Out = 2'b01;
+//						State = SWrite;
+//					end
+//				SAdd11: 
+//					begin
+//						assign ALUSRC1 = 1;
+//						assign ALUSRC2 = 2'b00;
+//						assign ALUOPP = 0;
+//						assign R1Out = 2'b01;
+//						assign R2Out = 2'b01;
+//						State = SWrite;
+//					end
+
+
+				SSub: 
+					begin
+//						 R1Out = R1;
+//						 R2Out = R3;
+//						 R1Write = 1;
+//						 R2Write = 1;
+//						// #200;
+						 R1Write = 0;
+						 R2Write = 0;
+						 ALUSRC1 = 0;
+						 ALUSRC2 = 2'b00;
+						 ALUOPP = 1;
+						 ImmSel = 2'b00;
+						 R1Out = R2;
+						 R2Out = R3;
+						 PCWrite = 0;
+						 regWrite = 0;
+						 MDWrite = 0;
+						 ALUOutWrite = 1;
+						// MDSel = 0;
+						 ImmWrite = 0;
+						 State = SWrite;
+					end
+//				SSub01: 
+//					begin
+//						assign ALUSRC1 = 1;
+//						assign ALUSRC2 = 2'b00;
+//						assign ALUOPP = 1;
+//						assign R1Out = 2'b01;
+//						assign R2Out = 2'b00;
+//						State = SWrite;
+//					end
+//				SSub10: 
+//					begin
+//						assign ALUSRC1 = 1;
+//						assign ALUSRC2 = 2'b00;
+//						assign ALUOPP = 1;
+//						assign R1Out = 2'b00;
+//						assign R2Out = 2'b01;
+//						State = SWrite;
+//					end
+//				SSub11:	
+//					begin
+//						assign ALUSRC1 = 1;
+//						assign ALUSRC2 = 2'b00;
+//						assign ALUOPP = 1;
+//						assign R1Out = 2'b01;
+//						assign R2Out = 2'b01; 
+//						State = SWrite;
+//					end
+
+
+				SWrite: 
+					begin
+//						 MemtoReg = 2'b01;
+//						 regWrite = 1;
+//						 #200;
+						 regWrite = 0;
+						 PCWrite = 0;
+						 MDWrite = 0;
+						 ImmSel = 2'b00;
+						// MDSel = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						State = Fetch;
+					end
+					
+				Equal:
+					begin
+						 cmp = 2'b00;
+						 ALUSRC1 = 1;
+						 ALUSRC2 = 2'b00;
+						 R1Out = R1;
+						 R2Out = R2;
+						 regWrite = 0;
+						 PCWrite = 1;
+						// PCSource = 1;
+						 MDWrite = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						 Branch = 1;
+						// MDSel = 0;
+						 ImmSel = 2'b01;
+						 PCSRC = 0;
+						State = Fetch;
+					end
+				
+				LessThan:
+					begin
+						 cmp = 2'b10;
+						 ALUSRC1 = 1;
+						 PCSRC = 0;
+						 ALUSRC2 = 2'b00;
+						 R1Out = R1;
+						 Branch =1;
+						 R2Out = R2;
+						 regWrite = 0;
+						 PCWrite = 1;
+						 MDWrite = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						// MDSel = 0;
+						 ImmSel = 2'b01;
+						State = Fetch;
+					end
+				
+				gte:
+					begin
+						 cmp = 2'b01;
+						 ALUSRC1 = 1;
+						 ALUSRC2 = 2'b00;
+						 PCSRC = 0;
+						 R1Out = R1;
+						 R2Out = R2;
+						 regWrite = 0;
+						 PCWrite = 1;
+						 Branch =1;
+						 MDWrite = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						// MDSel = 0;
+						 ImmSel = 2'b01;
+						State = Fetch;
+					end
+				
+				NotEqual:
+					begin
+						 cmp = 2'b11;
+						 ALUSRC1 = 1;
+						 ALUSRC2 = 2'b00;
+						 R1Out = R1;
+						 R2Out = R2;
+						 regWrite = 0;
+						 PCWrite = 1;
+						 Branch =1;
+						 MDWrite = 0;
+						 PCSRC = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						// MDSel = 0;
+						 ImmSel = 2'b01;
+						State = Fetch;
+					end
+				
+//				R01:
+//					begin
+//						assign ALUSRC1 = 1;
+//						assign ALUSRC2 = 2'b00;
+//						assign R1Out = 2'b01;
+//						assign R2Out = 2'b00;
+//						State = Fetch;
+//					end
+//				R10: 
+//					begin
+//						assign ALUSRC1 = 1;
+//						assign ALUSRC2 = 2'b00;
+//						assign R1Out = 2'b00;
+//						assign R2Out = 2'b01;
+//						State = Fetch;
+//					end
+//				R11: 
+//					begin
+//						assign ALUSRC1 = 1;
+//						assign ALUSRC2 = 2'b00;
+//						assign R1Out = 2'b01;
+//						assign R2Out = 2'b01;
+//						State = Fetch;
+//					end
+
+//				Beq:
+//					begin
+//						 ALUSRC1 = 0;
+//						 ALUSRC2 = 2'b10;
+//						 ALUOPP = 0;
+//						 regWrite = 0;
+//						 PCWrite = 1;
+//						 MDWrite = 0;
+//						 ALUOutWrite = 1;
+//						 ImmWrite = 0;
+//						if(Opcode == 4'b1001) State = Proc;
+//						else if(Opcode == 4'b0111) State = Fetch;
+//					end
+
+				JumpProc:
+					begin					
+						 PCWrite = 1;
+						// PCSource = 1;
+						 ALUSRC1 = 0;
+						 ALUSRC2 = 2'b10;
+						 ALUOPP = 0;
+						 regWrite = 0;
+						 PCWrite = 1;
+						 ImmSel = 2'b11;
+						 MDWrite = 0;
+						 ALUOutWrite = 1;
+						 PCSRC = 2;
+						 ImmWrite = 0;
+						if(Opcode == 4'b1001) State = Proc;
+						else if(Opcode == 4'b0111) State = Fetch;
+					end
+					
+				Proc: 
+					begin
+						 regWrite = 1;
+						 ImmSel = 2'b11;
+						 MemtoReg = 2'b01;
+						 PCWrite = 0;
+						 PCSRC = 2;
+						 MDWrite = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						State = Fetch;
+					end
+					
+				Ret: 
+					begin
+						 ALUSRC1 = 0;
+						 ALUSRC2 = 2'b10;
+						 PCSRC = 2;
+						 ALUOPP = 0;
+						 regWrite = 0;
+						 ImmSel = 2'b11;
+						 PCWrite = 1;
+						 MDWrite = 0;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						State = Fetch;
+					end
+					
+
+				default: 
+					begin
+						// MemWrite = 0;
+						 ALUSRC1 = 0;
+						 ALUSRC2 = 2'b00;
+						 IRWrite = 0;
+						 ALUOPP = 0;
+						 R1Out = 2'b00;
+						 IorD = 0;
+						 R2Out = 2'b00;
+						 DatatoMem = 0;
+						 regWrite = 0;
+						 MemRead = 0;
+						 MemtoReg = 2'b00;
+						 PCWrite = 0;
+						 R1Write = 0;
+						 R2Write = 0;
+						 MDWrite = 0;
+						 ImmSel = 2'b00;
+						 ALUOutWrite = 0;
+						 ImmWrite = 0;
+						$display("inside default, Opcode wrong");
+						State = Reset_s;
+					end
+			endcase
+end
+endmodule
+				

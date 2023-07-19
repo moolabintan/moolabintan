@@ -1,0 +1,109 @@
+module implementation1TB();
+reg [15:0] input_value;
+reg CLK, RST;
+reg [15:0] output_value;
+parameter HALF_PERIOD=50;
+parameter PERIOD = HALF_PERIOD*2;
+
+// Memory input and out
+reg [15:0] din;
+reg [15:0] Addr;
+reg Mem_Write;
+wire [15:0] dout;
+
+// ALU inputs and out
+reg [15:0] A, B;
+reg Op;
+wire [15:0] ALU_Out;
+
+//Instruction Register
+reg [15:0] instruction;
+wire [1:0] reg1, reg2, regDest;
+wire [5:0] imm1;
+wire [7:0] imm2;
+wire [9:0] imm3;
+
+
+implementation UUT(
+.input_value(input_value),
+.CLK(CLK), .RST(RST),
+// Memory input and out
+.din(din),
+.Addr(Addr),
+.Mem_Write(Mem_Write),
+.dout(dout),
+
+// ALU inputs and out
+.A(A),
+.B(B),
+.Op(Op),
+.ALU_Out(ALU_Out),
+
+.instruction(instruction),
+.reg1(reg1), .reg2(reg2), .regDest(regDest),
+.imm1(imm1), .imm2(imm2), .imm3(imm3)
+);
+
+integer failed_tests = 0;
+
+initial begin
+    CLK = 0;
+    forever begin
+        #(HALF_PERIOD);
+        CLK = ~CLK;
+    end
+end
+
+#(PERIOD);
+
+initial begin 
+	RST = 0;
+	Mem_Write = 0;
+	din = 0;
+	Op = 0;
+	B = 2;
+	#(PERIOD);
+	if(dout == 16'b0001000000000000 && reg1 == 11 && reg2 == 00 && reg2 == 00 && imm1 == 000000
+		&& imm2 == 00000000 && imm3 == 0000000000) begin
+	failed_tests = failed_tests + 1;
+	end
+	#(PERIOD);
+	
+	#(PERIOD);
+	if(dout != 16'b0001000000010101) begin
+	failed_tests = failed_tests + 1;
+	end
+	#(PERIOD);
+	
+	#(PERIOD);
+	if(dout != 16'b1101000011100001) begin
+	failed_tests = failed_tests + 1;
+	end
+	#(PERIOD);
+	
+	#(PERIOD);
+	if(dout != 16'b1001000000001010) begin
+	failed_tests = failed_tests + 1;
+end
+	#(PERIOD);
+	
+	#(PERIOD);
+	if(dout != 16'b0111000000010000) begin
+	failed_tests = failed_tests + 1;
+	end
+	#(PERIOD);
+	
+	#(PERIOD);
+	if(dout != 16'b0000000000000100) begin
+	failed_tests = failed_tests + 1;
+	end
+	#(PERIOD);
+	
+
+	$display("You failed %d Test", failed_tests);
+	$stop;
+	
+end
+
+endmodule
+	

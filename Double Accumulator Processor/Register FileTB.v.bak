@@ -1,0 +1,23 @@
+module Register_FileTB();
+   logic    clk = 0, we3;
+   logic    [3:0] a1, a2, a3;
+   logic     [31:0] wd3;
+   logic    [31:0] rd1, rd2;
+
+	Register_File uut(.clk(clk), .we3(we3), .a1(a1), .a2(a2), .a3(a3), .wd3(wd3), 
+	.rd1(rd1), .rd2(rd2));
+
+	always  #5 clk = ~clk; 
+	initial begin
+		a1=0;a2=0;a3=0;we3=0;wd3=0;
+		#10 
+		we3=1;
+		a1=5;
+		a2=4;
+		a3=6;
+		wd3=15;
+
+		//#100 $finish;
+	end
+	
+endmodule

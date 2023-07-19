@@ -1,0 +1,109 @@
+`timescale 1 ns/1 ps
+
+//PC Register, Memory, Instruction Register, RegisterFile, 2:1 Mux, 4:1 Mux, ALU
+module implementation3(
+// Register inputs and out
+input reg [15:0] input_value,
+input reg CLK, RST,write_signal,
+output wire [15:0] output_value,
+
+
+// Memory input and out
+input reg [15:0] din,
+input reg [15:0] Addr,
+input reg Mem_Write,
+output wire [15:0] dout,
+
+// ALU inputs and out
+input reg [15:0] A, B,
+input reg Op,
+output wire [15:0] ALU_Out,
+
+
+//Instruction Register
+input reg [15:0] instruction,
+output wire [1:0] reg1, reg2, regDest,
+output wire [5:0] imm1,
+output wire [7:0] imm2,
+output wire [9:0] imm3,
+
+// Register File 
+input reg write, rst,
+input reg [1:0] wrAddr,
+input reg [15:0] wrData,
+input reg [1:0] rdAddrA, rdAddrB,
+output wire [15:0] rdDataA, rdDataB,
+output wire [15:0] ACCData,
+output wire [15:0] ACCOData,
+output wire [15:0] SPData,
+output wire [15:0] RAData
+
+
+//4:1 Mux
+input [1:0] mux1Sel;
+input [15:0] mux1A, mux1B, mux1C, mux1D;
+output reg [15:0] mux1Out;
+
+//2:1 Mux
+input mux2Sel;
+input [15:0] mux2A, mux2B;
+output reg [15:0] mux2Out;
+
+
+);
+
+ALU alu (
+		.A(A),
+		.B(B),
+		.Op(Op),
+		.ALU_Out(ALU_Out)
+	);
+
+Memory mem (
+.Data(din),
+.Addr(output_value),
+.Mem_Write(Mem_Write),
+.CLK(CLK),
+.Mem_Data(dout)
+);
+
+Register PC(
+.CLK(CLK),
+.input_value(ALU_Out),
+.RST(RST),
+.output_value(output_value),
+.write_signal(write_signal)
+);
+
+InstructionRegister IR(
+.instruction(dout),
+.CLK(CLK),.RST(RST),
+.reg1(reg1), .reg2(reg2), .regDest(regDest),
+.imm1(imm1), .imm2(imm2), .imm3(imm3)
+);
+
+Register_File regFile(
+.write(write),.rst(RST), .CLK(CLK),
+.wrAddr(wrAddr), .wrData(wrData),
+.rdAddrA(rdAddrA), .rdAddrB(rdAddrB),
+.rdDataA(rdDataA), .rdDataB(rdDataB),
+.ACCData(ACCData), .ACCOData(ACCOData), .SPData(SPData), .RAData(RAData)
+);
+
+mux4_1 Mux1(
+//TODO: Figure out what to do with immdeiate. Something with selecting which size immediate we want.
+.mux1Sel(mux1Sel), .mux1A(rdDataB), .mux1B(mux1B), .mux1C(mux1C), .mux1D(mux1D), .mux1Out(mux1Out)
+);
+
+mux2_1 Mux2(
+//TODO: Figure out what to do with immdeiate. Something with selecting which size immediate we want.
+.mux2Sel(mux2Sel), .mux2A(rdDataA), .mux2B(output_value)
+);
+
+
+
+endmodule
+
+
+
+

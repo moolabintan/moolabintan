@@ -1,0 +1,47 @@
+module tb();
+reg [15:0] input_value;
+reg CLK, RST;
+reg [15:0] output_value;
+
+Register UUT(
+.CLK(CLK),
+.input_value(input_value),
+.RST(RST),
+.output_value(output_value)
+);
+
+parameter HALF_PERIOD=50;
+parameter PERIOD = HALF_PERIOD*2; 
+
+initial begin
+    CLK = 0;
+    forever begin
+        #(HALF_PERIOD);
+        CLK = ~CLK;
+    end
+end
+
+integer failures = 0;
+
+//Test 1
+initial begin
+CLK = 0;
+RST = 0;
+#PERIOD;
+RST = 1;
+#PERIOD;
+
+//Test 2
+RST = 0;
+#PERIOD;
+input_value = 16'hbead;
+#PERIOD;
+input_value = 16'h1ea9;
+#PERIOD;
+RST = 1;
+PERIOD;
+input_value = 16'h7823;
+RST = 0;
+input_value = 16'h1243;
+end
+endmodule

@@ -1,0 +1,49 @@
+`timescale 1ns / 1ps
+
+module ALUTB;
+
+	reg [15:0] A, B;
+	reg Op;
+	
+	wire [15:0] ALU_Out;
+	
+	ALU UUT (
+		.A(A),
+		.B(B),
+		.Op(Op),
+		.ALU_Out(ALU_Out)
+	);
+	
+	integer failed_tests;
+	
+	initial begin
+		failed_tests = 0;
+		
+		// Test Case 1
+      A = 3;
+      B = 1;
+		Op = 0;
+		#1;
+		if (ALU_Out != 4) begin
+			$display("Test case 1 failed");
+			failed_tests = failed_tests + 1;
+		end
+		
+		
+		// Test Case 2
+		A = 3;
+      B = 1;
+		Op = 1;
+		#1;
+		if (ALU_Out != 2) begin
+			$display("Test case 2 failed");
+			failed_tests = failed_tests + 1;
+		end
+		
+		
+		
+		#1;
+		$display("All tests finsihed, %d tests failed", failed_tests);
+    end
+	 
+endmodule 

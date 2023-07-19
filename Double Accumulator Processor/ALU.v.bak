@@ -1,0 +1,39 @@
+<<<<<<< HEAD
+module ALU(A, B, Op, R);
+	input [15:0] A,B;
+	input [0] Op;
+	output [15:0] R;
+	wire [15:0] R1, R2;
+	reg [15:0] R3;
+	
+	
+	assign R1=A;
+	assign R2=B;
+	assign R=R3;
+	
+	always @(Op or R1 or R2) begin
+		case (Op)
+		0 : R3 = R1 + R2;
+		1 : R3 = R1 - R2;
+=======
+module ALU(
+	input wire signed [15:0] A,B,
+	input wire Op,
+	output reg [15:0] ALU_Out
+);
+	
+	
+	always @(Op, A, B) begin
+		case (Op)
+		0 : ALU_Out = A + B;
+		1 : ALU_Out = A - B;
+>>>>>>> 7534b93869012945595e32d2e9669165784c0571
+		endcase
+			
+	end
+endmodule
+	
+<<<<<<< HEAD
+=======
+	
+>>>>>>> 7534b93869012945595e32d2e9669165784c0571

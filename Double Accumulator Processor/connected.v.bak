@@ -1,0 +1,324 @@
+`timescale 1ns / 1ps
+module connected(
+		input CLK, RST,
+		output [4:0] State,
+		output [15:0] ACCOut_Out
+);
+
+//control
+
+//	input [3:0] Opcode,
+//	input [1:0] R1,
+//	input [1:0] R2,
+//	input [1:0] R3,
+	wire MemRead;
+	wire [1:0] ALUSRC1;
+	wire [1:0] ALUSRC2;
+	wire IRWrite;
+	wire ALUOPP;
+	wire [1:0] R1Out;
+	wire [1:0] IorD;
+	wire [1:0] ImmSel;
+	wire [1:0] R2Out;
+	wire DatatoMem;
+	wire regWrite;
+	wire [1:0]MemtoReg;
+	wire [1:0] cmp;
+	wire PCWrite;
+	wire R1Write;
+	wire R2Write;
+	wire MDWrite;
+	wire Branch;
+	wire ALUOutWrite;
+	//wire MDSel;
+	wire ImmWrite;
+	wire [1:0] PCSRC;
+	//add Branch to control
+	
+	//wire [15:0] instr;
+	
+//	output wire State[4:0];
+//	output wire ACCData[15:0];
+	
+	//control
+	wire[15:0] Instruction;
+	Control Control(
+	.Opcode(Instruction[15:12]),
+	.R1(Instruction[1:0]),
+	.R2(Instruction[3:2]),
+	.R3(Instruction[5:4]),
+	.CLK(CLK),
+	.RST(RST),
+	.MemRead(MemRead),
+	.ALUSRC1(ALUSRC1),
+	.ALUSRC2(ALUSRC2),
+	.IRWrite(IRWrite),
+	.ALUOPP(ALUOPP),
+	.R1Out(R1Out),
+	.IorD(IorD),
+	.R2Out(R2Out),
+	.DatatoMem(DatatoMem),
+	.regWrite(regWrite),
+	.MemtoReg(MemtoReg),
+	.PCWrite(PCWrite),
+	.R1Write(R1Write),
+	.R2Write(R2Write),
+	.MDWrite(MDWrite),
+	.ALUOutWrite(ALUOutWrite),
+	.ImmWrite(ImmWrite),
+	.ImmSel(ImmSel),
+	.PCSRC(PCSRC),
+	.cmp(cmp),
+	.Branch(Branch),
+	//.MDSel(MDSel),
+	.State(State)
+	);
+	
+	//PCSRCMux
+	wire [15:0] PCSRC_Out;
+	wire [15:0] SEImm;
+	wire [15:0] ALUOut_Out;
+	wire [15:0] ALU_to_ALUOut;
+	wire [15:0] RAOut;
+	mux4_1 PCSRCMux(
+	.sel(PCSRC),
+	.a(ALUOut_Out),
+	.b(ALU_to_ALUOut),
+	.c(SEImm<<1),
+	.d(RAOut),
+	.out(PCSRC_Out)
+	);
+	
+	//PC
+	wire [15:0] PC_out;
+	wire PCWrite2;
+	wire compOut;
+	
+	assign  PCWrite2 = ((compOut && Branch) || PCWrite);
+	
+	Register PC(
+	.input_value(PCSRC_Out),
+	.CLK(CLK), 
+	.RST(RST), 
+	.output_value(PC_out), 
+	.write_signal(PCWrite2)
+	);
+	
+	
+	//IorDMux
+	wire [15:0] SPOut;
+	wire [15:0] R2Reg_Out;
+	wire [15:0] IorD_to_Mem;
+	mux4_1 IorDMux(
+	.sel(IorD),
+	.a(ALUOut_Out),
+	.b(R2Reg_Out),
+	.c(SPOut),
+	.d(0),
+	.out(IorD_to_Mem)
+	);
+	
+	//Mem
+	wire [15:0] DatatoMem_to_Mem;
+	wire [15:0] MDIn;
+	Memory Mem(
+	.Data(DatatoMem_to_Mem), 
+	.Addr(PC_out), //address of PC
+	.SP(IorD_to_Mem), 
+	.Mem_Write(!MemRead),
+	.CLK(CLK), 
+	.Mem_Data(Instruction),
+	.SP_Data(MDIn)
+	);
+	
+	//IR
+	wire [0:5]imm1;
+	wire [0:7]imm2;
+	wire [0:9]imm3;
+	wire [0:11]imm4;
+	wire [0:1]reg1;
+	wire [0:1]reg2;
+	wire [0:1]reg3;
+	InstructionRegister IR(
+	.instruction(Instruction),
+	.CLK(CLK),
+	.RST(RST),
+	.write_signal(IRWrite),
+	.reg1(reg1),
+	.reg2(reg2),
+	.regDest(reg3),
+	.imm1(imm1),
+	.imm2(imm2),
+	.imm3(imm3),
+	.imm4(imm4)
+	);
+	
+	//SEs
+	wire [15:0]SEImm1;
+	sign_extender6b SE1(
+	.in(imm1),
+	.out(SEImm1)
+	);
+	
+	wire [0:15]SEImm2;
+	sign_extender8b SE2(
+	.in(imm2),
+	.out(SEImm2)
+	);
+	
+	wire[15:0] SEImm3;
+	sign_extender10b SE3(
+	.in(imm3),
+	.out(SEImm3)
+	);
+	
+	//ImmSelMux
+mux4_1 ImmSelMux(
+	.sel(ImmSel), //add ImmSel to control
+	.a(SEImm1),
+	.b(SEImm2),
+	.c(SEImm3),
+	.d(16'd0),
+	.out(SEImm)
+	);
+	
+	//MemtoRegMux
+	wire [15:0] RFData;
+	wire [15:0] MDOut;
+mux4_1 MemtoRegMux(
+	.sel(MemtoReg), //add ImmSel to control
+	.a(MDOut),
+	.b(ALUOut_Out),
+	.c(SEImm),
+	.d(16'd0),
+	.out(RFData)
+	);
+
+	//RF
+	wire [15:0] rfOut1;
+	wire [15:0] rfOut2;
+	wire [15:0] rfOut3;
+	wire [15:0] ACC;
+Register_File RF(
+	.CLK(CLK),
+	.rst(RST),
+	.R1(reg1),
+	.write(regWrite),
+	.R2(reg2),
+	.R3(reg3),
+	.Dest(reg3),
+	.wrData(RFData),
+	.Out1(rfOut1),
+	.Out2(rfOut2),
+	.Out3(rfOut3),
+	.ACCOut(ACCOut_Out),
+	.SPOut(SPOut),
+	.RAOut(RAOut)
+);
+	
+	//MDSelMux
+//	mux2_1 MDSelMux(
+//	.sel(MDSel), //add MDSel to control
+//	.a(Instruction),
+//	.b(SP_Data_to_MDsel),
+//	.out(MDIn)
+//	);
+	
+	//MD
+	Register MD(
+	.input_value(MDIn),
+	.CLK(CLK), 
+	.RST(RST), 
+	.output_value(MDOut), 
+	.write_signal(MDWrite)
+	);
+	
+	//DatatoMemMux
+	mux2_1 DatatoMemMux(
+	.sel(DatatoMem), 
+	.a(rfOut3),
+	.b(SEImm),
+	.out(DatatoMem_to_Mem)
+	);
+	
+	//R1Reg
+	wire [15:0]R1Reg_Out;
+	Register R1Reg(
+	.input_value(rfOut1),
+	.CLK(CLK), 
+	.RST(RST), 
+	.output_value(R1Reg_Out), 
+	.write_signal(R1Write)
+	);
+	
+	//R2Reg
+	Register R2Reg(
+	.input_value(rfOut2),
+	.CLK(CLK), 
+	.RST(RST), 
+	.output_value(R2Reg_Out), 
+	.write_signal(R2Write)
+	);
+	
+//	//ACCOut
+//	//wire [15:0] ACCData;
+//	Register ACCOut(
+//	.input_value(ACC),
+//	.CLK(CLK), 
+//	.RST(RST), 
+//	.output_value(ACCOut_Out), 
+//	.write_signal(1'b1)
+//	);
+	
+	//ALUSRC1Mux
+	wire [15:0] SRC1_to_ALU;
+	mux4_1 ALUSRC1Mux(
+	.sel(ALUSRC1), 
+	.a(PC_out),
+	.b(R1Reg_Out),
+	.c(rfOut3),
+	.d(0),
+	.out(SRC1_to_ALU)
+	);
+	
+	//ALUSRC2Mux
+	wire [15:0]SRC2_to_ALU;
+mux4_1 ALUSRC2Mux(
+	.sel(ALUSRC2), //add ImmSel to control
+	.a(R2Reg_Out),
+	.b(SEImm),
+	.c(16'd1), //might change to 2
+	.d(rfOut3),
+	.out(SRC2_to_ALU)
+	);
+	
+	//ALU
+	//wire [15:0] ALU_to_ALUOut;
+	ALU ALU(
+	.A(SRC2_to_ALU),
+	.B(SRC1_to_ALU),
+	.Op(ALUOPP),
+	.ALU_Out(ALU_to_ALUOut)
+	);
+	
+	//ALUOut
+	Register ALUOut(
+	.input_value(ALU_to_ALUOut),
+	.CLK(CLK), 
+	.RST(RST), 
+	.output_value(ALUOut_Out), 
+	.write_signal(ALUOutWrite)
+	);
+	
+	//Comparator
+	Comparator CMP(
+	.a(rfOut2),
+	.b(rfOut3),
+	.cmp(cmp),
+	.out(compOut)
+	);
+	
+	
+	endmodule
+	
+	
