@@ -1,6 +1,6 @@
 - 👋 Hi, I’m Michael Olabintan
 - 👀 I’m interested in Software Engineering, Data Science, and Problem Solving using Computer Science
-- 🌱 I’m currently learning Introduction to Digital Systems
+- 🌱 I’m currently learning Machine Learning and Software Quality Assurance
 - 📫 How to reach me: Email - moolabintan@gmail.com
 
 In this repository I will be posting cool projects and things I have done in different courses that I am proud of
